@@ -18,7 +18,6 @@
 package com.rackspace.siflume;
 
 import org.apache.flume.Context;
-import org.apache.flume.EventDeliveryException;
 import org.apache.flume.Transaction;
 import org.apache.flume.channel.MemoryChannel;
 import org.apache.flume.event.SimpleEvent;
@@ -37,7 +36,7 @@ import static org.springframework.integration.test.matcher.PayloadMatcher.hasPay
 
 public class FlumeInboundChannelAdapterTest {
     @Test
-    public void testNormalFlow() throws EventDeliveryException, InterruptedException {
+    public void testNormalFlow() throws Exception {
         final int port = SocketUtils.findAvailableTcpPort();
         final QueueChannel outputChannel = new QueueChannel();
 
@@ -70,9 +69,11 @@ public class FlumeInboundChannelAdapterTest {
                     tx.begin();
                     flumeChannel.put(event);
                     tx.commit();
-                    tx.close();
                 } catch (Exception e) {
                     tx.rollback();
+                    throw e;
+                } finally {
+                    tx.close();
                 }
 
                 thriftSink.process();
